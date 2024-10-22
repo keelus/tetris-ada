@@ -47,7 +47,9 @@ procedure Tetris is
     -- Board declaration
     type Board is array (Rows, Cols) of Color_Type;
 
-    Current_Board : Board := (others => (others => Transparent));
+    -- Current_Board : Board := (others => (others => Transparent));
+    Current_Board : Board :=
+       ((others => Red), (others => Green), others => (others => Transparent));
 
     -- User input
     C : Character;
@@ -163,7 +165,6 @@ procedure Tetris is
 
                     if Cell_X < 0 then
                         return Collision_Place;
-                        -- Good_Fall := False;
                     end if;
                     if Cell_X >= 0 and
                        Current_Board (Rows'Val (Cell_Y), Cols'Val (Cell_X)) /=
@@ -178,10 +179,34 @@ procedure Tetris is
         return Collision_None;
     end Is_Piece_Colliding;
 
+    procedure Remove_Row (Target_I : Rows) is
+        Reversed_I : Rows;
+    begin
+        if Target_I = 0 then
+            for J in Cols loop
+                Current_Board (Target_I, J) := Transparent;
+            end loop;
+        else
+            for I in Rows loop
+                Reversed_I := Rows'Val (Board_Height - 1) - I;
+
+                if Reversed_I > 0 and Reversed_I <= Target_I then
+                    for J in Cols loop
+                        Current_Board (Reversed_I, J) :=
+                           Current_Board (Reversed_I - 1, J);
+                        -- Current_Board (Reversed_I, J) := Green;
+                    end loop;
+                end if;
+            end loop;
+        end if;
+    end Remove_Row;
+
     procedure Place_Piece (P : Piece) is
         P_Body : Piece_Body;
         Cell_X : Integer;
         Cell_Y : Integer;
+
+        Entire_Row_Filled : Boolean;
     begin
         P_Body := Get_Piece_Body (P);
 
@@ -195,6 +220,20 @@ procedure Tetris is
                        P.Color;
                 end if;
             end loop;
+        end loop;
+
+        for I in Rows loop
+            Entire_Row_Filled := True;
+
+            for J in Cols loop
+                if Current_Board (I, J) = Transparent then
+                    Entire_Row_Filled := False;
+                end if;
+            end loop;
+
+            if Entire_Row_Filled then
+                Remove_Row (I);
+            end if;
         end loop;
     end Place_Piece;
 
@@ -335,7 +374,7 @@ procedure Tetris is
     begin
         loop
             Print_Screen;
-            delay 0.5;
+            delay 0.2;
             Clear_Screen;
 
             Falling_Piece.Y := Falling_Piece.Y + 1;
