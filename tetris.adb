@@ -13,7 +13,7 @@ procedure Tetris is
     Random_Color           : Color_Type;
 
     -- Piece declaration
-    type Piece_Kind is (J, L, S, T, Z, O); -- TODO: I
+    type Piece_Kind is (J, L, S, T, Z, O, I);
 
     package Random_Piece_Kind is new Ada.Numerics.Discrete_Random (Piece_Kind);
     use Random_Piece_Kind;
@@ -21,8 +21,8 @@ procedure Tetris is
     Random_Kind           : Piece_Kind;
 
     -- Main piece types
-    type Piece_Width is range 0 .. 2;
-    type Piece_Height is range 0 .. 2;
+    type Piece_Width is range 0 .. 3;
+    type Piece_Height is range 0 .. 3;
     type Piece_Cell is range 0 .. 1;
     type Piece_Body is array (Piece_Height, Piece_Width) of Piece_Cell;
     type Rotation_Type is mod 4;
@@ -47,9 +47,7 @@ procedure Tetris is
     -- Board declaration
     type Board is array (Rows, Cols) of Color_Type;
 
-    -- Current_Board : Board := (others => (others => Transparent));
-    Current_Board : Board :=
-       ((others => Red), (others => Green), others => (others => Transparent));
+    Current_Board : Board := (others => (others => Transparent));
 
     -- User input
     C : Character;
@@ -61,60 +59,116 @@ procedure Tetris is
             when T =>
                 case P.Rotation is
                     when 0 =>
-                        P_Body := ((0, 1, 0), (1, 1, 1), (0, 0, 0));
+                        P_Body :=
+                           ((0, 1, 0, 0), (1, 1, 1, 0), (0, 0, 0, 0),
+                            others => (others => 0));
                     when 1 =>
-                        P_Body := ((0, 1, 0), (0, 1, 1), (0, 1, 0));
+                        P_Body :=
+                           ((0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                     when 2 =>
-                        P_Body := ((0, 0, 0), (1, 1, 1), (0, 1, 0));
+                        P_Body :=
+                           ((0, 0, 0, 0), (1, 1, 1, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                     when 3 =>
-                        P_Body := ((0, 1, 0), (1, 1, 0), (0, 1, 0));
+                        P_Body :=
+                           ((0, 1, 0, 0), (1, 1, 0, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                 end case;
             when L =>
                 case P.Rotation is
                     when 0 =>
-                        P_Body := ((0, 0, 1), (1, 1, 1), (0, 0, 0));
+                        P_Body :=
+                           ((0, 0, 1, 0), (1, 1, 1, 0), (0, 0, 0, 0),
+                            others => (others => 0));
                     when 1 =>
-                        P_Body := ((0, 1, 0), (0, 1, 0), (0, 1, 1));
+                        P_Body :=
+                           ((0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0),
+                            others => (others => 0));
                     when 2 =>
-                        P_Body := ((0, 0, 0), (1, 1, 1), (1, 0, 0));
+                        P_Body :=
+                           ((0, 0, 0, 0), (1, 1, 1, 0), (1, 0, 0, 0),
+                            others => (others => 0));
                     when 3 =>
-                        P_Body := ((1, 1, 0), (0, 1, 0), (0, 1, 0));
+                        P_Body :=
+                           ((1, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                 end case;
             when J =>
                 case P.Rotation is
                     when 0 =>
-                        P_Body := ((1, 0, 0), (1, 1, 1), (0, 0, 0));
+                        P_Body :=
+                           ((1, 0, 0, 0), (1, 1, 1, 0), (0, 0, 0, 0),
+                            others => (others => 0));
                     when 1 =>
-                        P_Body := ((0, 1, 1), (0, 1, 0), (0, 1, 0));
+                        P_Body :=
+                           ((0, 1, 1, 0), (0, 1, 0, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                     when 2 =>
-                        P_Body := ((0, 0, 0), (1, 1, 1), (0, 0, 1));
+                        P_Body :=
+                           ((0, 0, 0, 0), (1, 1, 1, 0), (0, 0, 1, 0),
+                            others => (others => 0));
                     when 3 =>
-                        P_Body := ((0, 1, 0), (0, 1, 0), (1, 1, 0));
+                        P_Body :=
+                           ((0, 1, 0, 0), (0, 1, 0, 0), (1, 1, 0, 0),
+                            others => (others => 0));
                 end case;
             when S =>
                 case P.Rotation is
                     when 0 =>
-                        P_Body := ((0, 1, 1), (1, 1, 0), (0, 0, 0));
+                        P_Body :=
+                           ((0, 1, 1, 0), (1, 1, 0, 0), (0, 0, 0, 0),
+                            others => (others => 0));
                     when 1 =>
-                        P_Body := ((0, 1, 0), (0, 1, 1), (0, 0, 1));
+                        P_Body :=
+                           ((0, 1, 0, 0), (0, 1, 1, 0), (0, 0, 1, 0),
+                            others => (others => 0));
                     when 2 =>
-                        P_Body := ((0, 0, 0), (0, 1, 1), (1, 1, 0));
+                        P_Body :=
+                           ((0, 0, 0, 0), (0, 1, 1, 0), (1, 1, 0, 0),
+                            others => (others => 0));
                     when 3 =>
-                        P_Body := ((1, 0, 0), (1, 1, 0), (0, 1, 0));
+                        P_Body :=
+                           ((1, 0, 0, 0), (1, 1, 0, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                 end case;
             when Z =>
                 case P.Rotation is
                     when 0 =>
-                        P_Body := ((1, 1, 0), (0, 1, 1), (0, 0, 0));
+                        P_Body :=
+                           ((1, 1, 0, 0), (0, 1, 1, 0), (0, 0, 0, 0),
+                            others => (others => 0));
                     when 1 =>
-                        P_Body := ((0, 0, 1), (0, 1, 1), (0, 1, 0));
+                        P_Body :=
+                           ((0, 0, 1, 0), (0, 1, 1, 0), (0, 1, 0, 0),
+                            others => (others => 0));
                     when 2 =>
-                        P_Body := ((0, 0, 0), (1, 1, 0), (0, 1, 1));
+                        P_Body :=
+                           ((0, 0, 0, 0), (1, 1, 0, 0), (0, 1, 1, 0),
+                            others => (others => 0));
                     when 3 =>
-                        P_Body := ((0, 1, 0), (1, 1, 0), (1, 0, 0));
+                        P_Body :=
+                           ((0, 1, 0, 0), (1, 1, 0, 0), (1, 0, 0, 0),
+                            others => (others => 0));
                 end case;
             when O =>
-                P_Body := ((0, 1, 1), (0, 1, 1), (0, 0, 0));
+                P_Body :=
+                   ((0, 1, 1, 0), (0, 1, 1, 0), others => (others => 0));
+            when I =>
+                case P.Rotation is
+                    when 0 =>
+                        P_Body :=
+                           ((others => 0), (others => 1),
+                            others => (others => 0));
+                    when 1 =>
+                        P_Body := (others => (0, 0, 1, 0));
+                    when 2 =>
+                        P_Body :=
+                           ((others => 0), (others => 0), (others => 1),
+                            (others => 0));
+                    when 3 =>
+                        P_Body := (others => (0, 1, 0, 0));
+                end case;
             when others =>
                 null;
         end case;
@@ -336,6 +390,8 @@ procedure Tetris is
     -- Yoinked from https://github.com/tsoding/ada-gol
     procedure Clear_Screen is
     begin
+        -- Put (Ada.Characters.Latin_1.ESC & "[2J");
+        -- Put (Ada.Characters.Latin_1.ESC & "[H");
         Put (Ada.Characters.Latin_1.ESC & "[" &
             Ada.Strings.Fixed.Trim (Board_Height'Image, Ada.Strings.Left) &
             "A");
@@ -364,18 +420,36 @@ procedure Tetris is
                 end if;
                 Put (" ");
             end loop;
-            Set_Ansi_Color (White);
             Put_Line ("");
         end loop;
+        Set_Ansi_Color (White);
     end Print_Screen;
+
+    protected Screen_Control is
+        procedure Clear_And_Print;
+    private
+        Has_Printed : Boolean := False;
+    end Screen_Control;
+
+    protected body Screen_Control is
+        procedure Clear_And_Print is
+        begin
+            if Has_Printed then
+                Clear_Screen;
+            else
+                Has_Printed := True;
+            end if;
+
+            Print_Screen;
+        end Clear_And_Print;
+    end Screen_Control;
 
     task Print_Task;
     task body Print_Task is
     begin
         loop
-            Print_Screen;
+            Screen_Control.Clear_And_Print;
             delay 0.2;
-            Clear_Screen;
 
             Falling_Piece.Y := Falling_Piece.Y + 1;
 
@@ -414,7 +488,6 @@ begin
                 null;
         end case;
 
-        Clear_Screen;
-        Print_Screen;
+        Screen_Control.Clear_And_Print;
     end loop Main_Loop;
 end Tetris;
