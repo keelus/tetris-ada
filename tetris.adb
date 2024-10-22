@@ -3,6 +3,7 @@ with Ada.Characters.Latin_1;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Numerics.Discrete_Random;
+with Ada.Real_Time;         use Ada.Real_Time;
 
 procedure Tetris is
     type Color_Type is (White, Yellow, Cyan, Red, Green, Purple, Transparent);
@@ -41,13 +42,18 @@ procedure Tetris is
     Board_Width  : constant Positive := 10;
     Board_Height : constant Positive := 20;
 
+    Visual_Board_Width  : constant Positive := 33;
+    Visual_Board_Height : constant Positive := Board_Height + 2;
+
     type Rows is range 0 .. Board_Height - 1;
     type Cols is range 0 .. Board_Width - 1;
 
     -- Board declaration
     type Board is array (Rows, Cols) of Color_Type;
 
-    Current_Board : Board := (others => (others => Transparent));
+    Current_Board   : Board   := (others => (others => Transparent));
+    Lines_Completed : Natural := 0;
+    Game_Started    : Time;
 
     -- User input
     C : Character;
@@ -236,6 +242,7 @@ procedure Tetris is
     procedure Remove_Row (Target_I : Rows) is
         Reversed_I : Rows;
     begin
+        Lines_Completed := Lines_Completed + 1;
         if Target_I = 0 then
             for J in Cols loop
                 Current_Board (Target_I, J) := Transparent;
@@ -393,16 +400,36 @@ procedure Tetris is
         -- Put (Ada.Characters.Latin_1.ESC & "[2J");
         -- Put (Ada.Characters.Latin_1.ESC & "[H");
         Put (Ada.Characters.Latin_1.ESC & "[" &
-            Ada.Strings.Fixed.Trim (Board_Height'Image, Ada.Strings.Left) &
+            Ada.Strings.Fixed.Trim
+               (Visual_Board_Height'Image, Ada.Strings.Left) &
             "A");
         Put (Ada.Characters.Latin_1.ESC & "[" &
-            Ada.Strings.Fixed.Trim (Board_Width'Image, Ada.Strings.Left) &
+            Ada.Strings.Fixed.Trim
+               (Visual_Board_Width'Image, Ada.Strings.Left) &
             "D");
     end Clear_Screen;
 
+    package IntIO is new Integer_IO (Natural);
+
     procedure Print_Screen is
+        Max_Line_Int_Width  : Positive;
+        Time_Passed         : Duration;
+        Time_Passed_Minutes : Integer := 0;
+        Time_Passed_Seconds : Integer := 0;
     begin
+        if Clock /= Game_Started then
+            Time_Passed := Duration (To_Duration (Clock - Game_Started));
+            Time_Passed_Seconds :=
+               Integer (Float'Floor (Float (Time_Passed))) mod 60;
+            Time_Passed_Minutes :=
+               Integer (Float'Floor (Float (Time_Passed) / 60.0));
+            -- Time_Passed_Seconds := Integer'Val (Time_Passed);
+        end if;
+        Max_Line_Int_Width := 6;
+        Put_Line ("          ╔═════════════════════╗");
         for I in Rows loop
+            Set_Ansi_Color (White);
+            Put ("          ║ ");
             for J in Cols loop
                 if Piece_Is_Cell
                       (Falling_Piece, Natural'Val (J), Natural'Val (I))
@@ -414,14 +441,49 @@ procedure Tetris is
                         Set_Ansi_Color (Current_Board (I, J));
                         Put ("■");
                     else
-                        Set_Ansi_Color (Cyan);
+                        Set_Ansi_Color (White);
                         Put (".");
                     end if;
                 end if;
                 Put (" ");
             end loop;
+            Set_Ansi_Color (White);
+            Put ("║");
+
+            case I is
+                when 1 | 6 | 14 =>
+                    Put ("   ╔═══════════════╗");
+                when 2 =>
+
+                    Put ("   ║ Lines: ");
+                    IntIO.Put (Item => Lines_Completed, Width => 6);
+                    Put (" ║");
+                when 3 =>
+                    Put ("   ║ Time: ");
+                    IntIO.Put (Item => Time_Passed_Minutes, Width => 2);
+                    Put ("m ");
+                    IntIO.Put (Item => Time_Passed_Seconds, Width => 2);
+                    Put ("s ");
+                    Put ("║");
+                when 7 =>
+                    Put ("   ║ Next:   xxxx  ║");
+                when 8 =>
+                    Put ("   ║            x  ║");
+                when 15 =>
+                    Put ("   ║ WASD and      ║");
+                when 16 =>
+                    Put ("   ║ Arrows: Move  ║");
+                when 17 =>
+                    Put ("   ║ R: Rotate     ║");
+                when 4 | 9 | 18 =>
+                    Put ("   ╚═══════════════╝");
+
+                when others =>
+                    null;
+            end case;
             Put_Line ("");
         end loop;
+        Put_Line ("          ╚═════════════════════╝");
         Set_Ansi_Color (White);
     end Print_Screen;
 
@@ -447,6 +509,7 @@ procedure Tetris is
     task Print_Task;
     task body Print_Task is
     begin
+        Game_Started := Clock;
         loop
             Screen_Control.Clear_And_Print;
             delay 0.2;
