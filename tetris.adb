@@ -4,6 +4,8 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Numerics.Discrete_Random;
 with Ada.Real_Time;         use Ada.Real_Time;
+with GNAT.OS_Lib;
+with System.OS_Lib;
 
 procedure Tetris is
     type Color_Type is (White, Yellow, Cyan, Red, Green, Purple, Transparent);
@@ -307,6 +309,8 @@ procedure Tetris is
         Reset (Random_Color_Generator);
         Reset (Random_Kind_Generator);
 
+        P.Rotation := 0;
+
         P.Color := Random (Random_Color_Generator);
         P.Kind  := Random (Random_Kind_Generator);
 
@@ -314,10 +318,16 @@ procedure Tetris is
             P.Color := Green;
         end if;
 
+        if Is_Piece_Colliding (P) /= Collision_None then
+            Put_Line ("Game ended!");
+            GNAT.OS_Lib.OS_Exit (0);
+        end if;
+
         return P;
     end Create_Piece;
 
-    Falling_Piece : Piece := Create_Piece;
+    Falling_Piece      : Piece := Create_Piece;
+    Next_Falling_Piece : Piece := Create_Piece;
 
     function Piece_Is_Cell (P : Piece; X, Y : Natural) return Boolean is
         P_Body : Piece_Body;
@@ -412,10 +422,11 @@ procedure Tetris is
     package IntIO is new Integer_IO (Natural);
 
     procedure Print_Screen is
-        Max_Line_Int_Width  : Positive;
         Time_Passed         : Duration;
         Time_Passed_Minutes : Integer := 0;
         Time_Passed_Seconds : Integer := 0;
+
+        Next_Piece_Body : Piece_Body;
     begin
         if Clock /= Game_Started then
             Time_Passed := Duration (To_Duration (Clock - Game_Started));
@@ -425,7 +436,8 @@ procedure Tetris is
                Integer (Float'Floor (Float (Time_Passed) / 60.0));
             -- Time_Passed_Seconds := Integer'Val (Time_Passed);
         end if;
-        Max_Line_Int_Width := 6;
+
+        Next_Piece_Body := Get_Piece_Body (Next_Falling_Piece);
         Put_Line ("          ╔═════════════════════╗");
         for I in Rows loop
             Set_Ansi_Color (White);
@@ -454,7 +466,6 @@ procedure Tetris is
                 when 1 | 6 | 14 =>
                     Put ("   ╔═══════════════╗");
                 when 2 =>
-
                     Put ("   ║ Lines: ");
                     IntIO.Put (Item => Lines_Completed, Width => 6);
                     Put (" ║");
@@ -465,10 +476,23 @@ procedure Tetris is
                     IntIO.Put (Item => Time_Passed_Seconds, Width => 2);
                     Put ("s ");
                     Put ("║");
-                when 7 =>
-                    Put ("   ║ Next:   xxxx  ║");
-                when 8 =>
-                    Put ("   ║            x  ║");
+                when 7 | 8 =>
+                    if I = 7 then
+                        Put ("   ║ Next:");
+                    else
+                        Put ("   ║      ");
+                    end if;
+                    Set_Ansi_Color (White);
+                    for J in Piece_Width loop
+                        if Next_Piece_Body (Piece_Height (I mod 7), J) = 1 then
+                            Set_Ansi_Color (Next_Falling_Piece.Color);
+                            Put (" ■");
+                        else
+                            Put ("  ");
+                        end if;
+                    end loop;
+                    Set_Ansi_Color (White);
+                    Put (" ║");
                 when 15 =>
                     Put ("   ║ WASD and      ║");
                 when 16 =>
@@ -520,7 +544,8 @@ procedure Tetris is
                 Falling_Piece.Y := Falling_Piece.Y - 1;
 
                 Place_Piece (Falling_Piece);
-                Falling_Piece := Create_Piece;
+                Falling_Piece      := Next_Falling_Piece;
+                Next_Falling_Piece := Create_Piece;
             end if;
         end loop;
     end Print_Task;
