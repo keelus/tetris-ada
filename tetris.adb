@@ -5,7 +5,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Numerics.Discrete_Random;
 with Ada.Real_Time;         use Ada.Real_Time;
 with GNAT.OS_Lib;
-with System.OS_Lib;
 
 procedure Tetris is
     type Color_Type is (White, Yellow, Cyan, Red, Green, Purple, Transparent);
@@ -120,7 +119,6 @@ procedure Tetris is
             when I =>
                 return I_Piece (P.Rotation);
         end case;
-        return P_Body;
     end Get_Piece_Body;
 
     type Collision_Type is (Collision_None, Collision_Edges, Collision_Place);
@@ -434,11 +432,11 @@ procedure Tetris is
                     Set_Ansi_Color (White);
                     Put (" ║");
                 when 15 =>
-                    Put ("   ║ WASD and      ║");
+                    Put ("   ║ A, D: Move    ║");
                 when 16 =>
-                    Put ("   ║ Arrows: Move  ║");
-                when 17 =>
                     Put ("   ║ R: Rotate     ║");
+                when 17 =>
+                    Put ("   ║ S: Fall       ║");
                 when 4 | 9 | 18 =>
                     Put ("   ╚═══════════════╝");
 
@@ -500,25 +498,25 @@ begin
     loop
         Get_Immediate (Standard_Input, C);
         case C is
-            when 'd' =>
+            when 'd' | 'D' =>
                 Falling_Piece.X := Falling_Piece.X + 1;
 
                 if Is_Piece_Colliding (Falling_Piece) /= Collision_None then
                     Falling_Piece.X := Falling_Piece.X - 1;
                 end if;
-            when 'a' =>
+            when 'a' | 'A' =>
                 Falling_Piece.X := Falling_Piece.X - 1;
 
                 if Is_Piece_Colliding (Falling_Piece) /= Collision_None then
                     Falling_Piece.X := Falling_Piece.X + 1;
                 end if;
-            when 'r' =>
+            when 'r' | 'R' =>
                 Falling_Piece.Rotation := Falling_Piece.Rotation + 1;
 
                 if Is_Piece_Colliding (Falling_Piece) /= Collision_None then
                     Falling_Piece.Rotation := Falling_Piece.Rotation - 1;
                 end if;
-            when 's' =>
+            when 's' | 'S' =>
                 Game_Controller.Update_Board;
             when others =>
                 null;
