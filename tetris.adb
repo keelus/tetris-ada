@@ -101,7 +101,6 @@ procedure Tetris is
         ((0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0)));
 
     function Get_Piece_Body (P : Piece) return Piece_Body is
-        P_Body : Piece_Body;
     begin
         case P.Kind is
             when T =>
@@ -280,44 +279,9 @@ procedure Tetris is
         end if;
 
         P_Body := Get_Piece_Body (P);
-        if P_Body (Piece_Height'Val (Y - P.Y), Piece_Width'Val (X - P.X)) = 1
-        then
-            return True;
-        end if;
-        return False;
+        return
+           P_Body (Piece_Height'Val (Y - P.Y), Piece_Width'Val (X - P.X)) = 1;
     end Piece_Is_Cell;
-
-    function Get_Piece_Width (P : Piece) return Piece_Width is
-        P_Body : Piece_Body;
-        Width  : Piece_Width := 1;
-    begin
-        P_Body := Get_Piece_Body (P);
-
-        for I in Piece_Height loop
-            for J in Piece_Width loop
-                if P_Body (I, J) = 1 and J > Width then
-                    Width := J;
-                end if;
-            end loop;
-        end loop;
-        return Width;
-    end Get_Piece_Width;
-
-    function Get_Piece_Height (P : Piece) return Piece_Height is
-        P_Body : Piece_Body;
-        Height : Piece_Height := 1;
-    begin
-        P_Body := Get_Piece_Body (P);
-
-        for I in Piece_Height loop
-            for J in Piece_Width loop
-                if P_Body (I, J) = 1 and I > Height then
-                    Height := I;
-                end if;
-            end loop;
-        end loop;
-        return Height;
-    end Get_Piece_Height;
 
     procedure Set_Ansi_Color (Color : Color_Type) is
         Ansi : Unbounded_String;
